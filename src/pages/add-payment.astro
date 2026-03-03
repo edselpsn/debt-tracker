@@ -1,25 +1,25 @@
 ---
-import { supabase } from '../../lib/supabase'
-import { getSession } from '../../lib/auth'
-import BaseLayout from '../../layouts/BaseLayout.astro'
+import { supabase } from '../lib/supabase'
+import { getSession } from '../lib/auth'
+import BaseLayout from '../layouts/BaseLayout.astro'
 
 const session = await getSession()
 if (!session) return Astro.redirect('/login')
 
-const debtId = Astro.params.id
-
-// Fetch debt
+// Fetch user's single debt
 const { data: debt } = await supabase
   .from('debts')
   .select('*')
-  .eq('id', debtId)
+  .eq('user_id', session.user.id)
   .single()
+
+if (!debt) return Astro.redirect('/set-debt')
 
 // Fetch payments
 const { data: payments } = await supabase
   .from('payments')
   .select('*')
-  .eq('debt_id', debtId)
+  .eq('user_id', session.user.id)
   .order('payment_date', { ascending: false })
 
 let error = ''
@@ -32,7 +32,7 @@ if (Astro.request.method === 'POST') {
   const { error: insertError } = await supabase
     .from('payments')
     .insert({
-      debt_id: debtId,
+      debt_id: debt.id,
       user_id: session.user.id,
       amount,
       payment_date
@@ -41,42 +41,42 @@ if (Astro.request.method === 'POST') {
   if (insertError) {
     error = insertError.message
   } else {
-    return Astro.redirect(`/debt/${debtId}`)
+    return Astro.redirect('/add-payment')
   }
 }
 
 const totalPaid = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0
-const remaining = Number(debt?.total_amount || 0) - totalPaid
+const remaining = Number(debt.total_amount) - totalPaid
+const progress = debt.total_amount > 0
+  ? (totalPaid / debt.total_amount) * 100
+  : 0
 ---
 
-<BaseLayout title={debt?.name}>
+<BaseLayout title="Add Payment">
   <div class="min-h-screen bg-gray-100 py-10">
     <div class="max-w-xl mx-auto bg-white p-6 rounded-xl shadow-md">
 
       <!-- Header -->
-      <h1 class="text-2xl font-bold mb-2">{debt?.name}</h1>
+      <h1 class="text-2xl font-bold mb-2">Add Payment</h1>
       <p class="text-gray-600 mb-6">
-        Total: ₱{Number(debt?.total_amount || 0).toLocaleString()}
+        Total Debt: ₱{Number(debt.total_amount).toLocaleString()}
       </p>
 
-      <!-- Summary Section -->
+      <!-- Summary -->
       <div class="mb-6 space-y-2">
         <p><span class="font-medium">Total Paid:</span> ₱{totalPaid.toLocaleString()}</p>
         <p><span class="font-medium">Remaining:</span> ₱{remaining.toLocaleString()}</p>
 
-        <!-- Progress Bar -->
         <div class="w-full bg-gray-200 h-4 rounded-full overflow-hidden mt-2">
           <div
             class="bg-green-500 h-4 transition-all duration-500"
-            style={`width: ${(debt?.total_amount ? (totalPaid / debt.total_amount) * 100 : 0)}%`}
+            style={`width: ${progress}%`}
           ></div>
         </div>
       </div>
 
       <!-- Add Payment Form -->
       <div class="mb-8">
-        <h2 class="text-lg font-semibold mb-3">Add Payment</h2>
-
         {error && (
           <p class="text-red-500 text-sm mb-3">{error}</p>
         )}
@@ -87,14 +87,14 @@ const remaining = Number(debt?.total_amount || 0) - totalPaid
             type="number"
             placeholder="Payment Amount"
             required
-            class="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
           />
 
           <input
             name="payment_date"
             type="date"
             required
-            class="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
           />
 
           <button
@@ -105,7 +105,7 @@ const remaining = Number(debt?.total_amount || 0) - totalPaid
         </form>
       </div>
 
-      <!-- Payments List -->
+      <!-- Payment History -->
       <div>
         <h2 class="text-lg font-semibold mb-3">Payment History</h2>
 
@@ -123,12 +123,8 @@ const remaining = Number(debt?.total_amount || 0) - totalPaid
         )}
       </div>
 
-      <!-- Back Button -->
       <div class="mt-6">
-        <a
-          href="/dashboard"
-          class="text-blue-600 hover:underline text-sm"
-        >
+        <a href="/dashboard" class="text-blue-600 hover:underline text-sm">
           ← Back to Dashboard
         </a>
       </div>
