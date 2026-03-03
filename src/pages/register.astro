@@ -1,0 +1,103 @@
+---
+import { supabase } from '../lib/supabase'
+import BaseLayout from '../layouts/BaseLayout.astro'
+
+let error = ''
+
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData()
+
+  const name = formData.get('name')?.toString() || ''
+  const email = formData.get('email')?.toString() || ''
+  const password = formData.get('password')?.toString() || ''
+
+  const { data, error: signUpError } = await supabase.auth.signUp({
+    email,
+    password
+  })
+
+  if (signUpError) {
+    error = signUpError.message
+  } else {
+    // Update profile name AFTER signup
+    if (data.user) {
+      await supabase
+        .from('profiles')
+        .update({ name })
+        .eq('id', data.user.id)
+    }
+
+    return Astro.redirect('/dashboard')
+  }
+}
+---
+
+<BaseLayout title="Register">
+  <div class="min-h-screen flex items-center justify-center bg-gray-100">
+    <div class="w-full max-w-sm bg-white p-6 rounded-xl shadow-md">
+
+      <h1 class="text-2xl font-bold mb-6 text-center">Create Account</h1>
+
+      {error && (
+        <p class="text-red-500 text-sm mb-4 text-center">
+          {error}
+        </p>
+      )}
+
+      <form method="POST" class="space-y-4">
+
+        <div>
+          <label class="block text-sm font-medium mb-1">
+            Full Name
+          </label>
+          <input
+            name="name"
+            placeholder="Enter your full name"
+            required
+            class="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">
+            Email
+          </label>
+          <input
+            name="email"
+            type="email"
+            placeholder="Enter your email"
+            required
+            class="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">
+            Password
+          </label>
+          <input
+            name="password"
+            type="password"
+            placeholder="Create a password"
+            required
+            class="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <button
+          class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+        >
+          Sign Up
+        </button>
+      </form>
+
+      <p class="text-sm text-center text-gray-600 mt-4">
+        Already have an account?
+        <a href="/login" class="text-blue-600 hover:underline">
+          Login
+        </a>
+      </p>
+
+    </div>
+  </div>
+</BaseLayout>

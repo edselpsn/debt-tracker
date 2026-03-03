@@ -1,0 +1,69 @@
+---
+import { supabase } from '../lib/supabase'
+import { getSession } from '../lib/auth'
+import BaseLayout from '../layouts/BaseLayout.astro'
+
+const session = await getSession()
+
+if (!session) {
+  return Astro.redirect('/login')
+}
+
+const { data: debts } = await supabase
+  .from('debts')
+  .select('*')
+  .order('created_at', { ascending: false })
+---
+
+<BaseLayout title="My Debts">
+  <div class="min-h-screen bg-gray-100 py-10">
+    <div class="max-w-xl mx-auto bg-white p-6 rounded-xl shadow-md">
+
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">My Debts</h1>
+
+        <a
+          href="/add-debt"
+          class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+        >
+          + Add Debt
+        </a>
+      </div>
+
+      <!-- Debt List -->
+      {debts && debts.length > 0 ? (
+        <ul class="space-y-3">
+          {debts.map(debt => (
+            <li>
+              <a
+                href={`/debt/${debt.id}`}
+                class="block p-4 border rounded-lg hover:bg-gray-50 transition"
+              >
+                <div class="flex justify-between items-center">
+                  <span class="font-medium">{debt.name}</span>
+                  <span class="text-gray-600">
+                    ₱{Number(debt.total_amount).toLocaleString()}
+                  </span>
+                </div>
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div class="text-center py-10 text-gray-500">
+          <p>No debts yet.</p>
+          <p class="text-sm mt-1">Click "Add Debt" to start tracking.</p>
+        </div>
+      )}
+
+      <!-- Back -->
+      <div class="mt-6">
+        <a href="/dashboard" class="text-blue-600 hover:underline text-sm">
+          ← Back to Dashboard
+        </a>
+      </div>
+
+    </div>
+  </div>
+</BaseLayout>

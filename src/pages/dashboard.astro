@@ -1,0 +1,88 @@
+---
+import { supabase } from '../lib/supabase'
+import { getSession } from '../lib/auth'
+import BaseLayout from '../layouts/BaseLayout.astro'
+
+const session = await getSession()
+if (!session) return Astro.redirect('/login')
+
+// Get all debts for current user
+const { data: debts } = await supabase
+  .from('debts')
+  .select('*')
+  .eq('user_id', session.user.id)
+
+const { data: payments } = await supabase
+  .from('payments')
+  .select('*')
+  .eq('user_id', session.user.id)
+
+const { data: profile } = await supabase
+  .from('profiles')
+  .select('name')
+  .eq('id', session.user.id)
+  .single()
+
+const totalDebt = debts?.reduce((sum, d) => sum + Number(d.total_amount), 0) || 0
+const totalPaid = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0
+const remaining = totalDebt - totalPaid
+const progress = totalDebt > 0 ? (totalPaid / totalDebt) * 100 : 0
+---
+
+<BaseLayout title="Dashboard">
+  <div class="min-h-screen bg-gray-100 py-10">
+    <div class="max-w-xl mx-auto bg-white p-6 rounded-xl shadow-md">
+
+      <h1 class="text-2xl font-bold mb-2">Dashboard</h1>
+      <p class="text-gray-600 mb-6">
+        Welcome, <span class="font-medium">{profile?.name}</span>
+      </p>
+
+      <div class="space-y-2 mb-6">
+        <p><span class="font-medium">Total Debt:</span> ₱{totalDebt.toLocaleString()}</p>
+        <p><span class="font-medium">Total Paid:</span> ₱{totalPaid.toLocaleString()}</p>
+        <p><span class="font-medium">Remaining:</span> ₱{remaining.toLocaleString()}</p>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="mb-6">
+        <div class="w-full bg-gray-200 h-4 rounded-full overflow-hidden">
+          <div
+            class="bg-green-500 h-4 transition-all duration-500"
+            style={`width: ${progress}%`}
+          ></div>
+        </div>
+        <p class="text-sm text-gray-600 mt-1">
+          {progress.toFixed(1)}% paid
+        </p>
+      </div>
+
+      <!-- Navigation Buttons -->
+      <div class="flex gap-3 mb-4">
+        <a
+          href="/add-debt"
+          class="flex-1 text-center bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+        >
+          Add Debt
+        </a>
+
+        <a
+          href="/my-debts"
+          class="flex-1 text-center bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-900 transition"
+        >
+          My Debts
+        </a>
+      </div>
+
+      <!-- Logout -->
+      <form method="POST" action="/logout">
+        <button
+          class="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition"
+        >
+          Logout
+        </button>
+      </form>
+
+    </div>
+  </div>
+</BaseLayout>
