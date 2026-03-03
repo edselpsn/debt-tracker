@@ -6,11 +6,13 @@ import BaseLayout from '../layouts/BaseLayout.astro'
 const session = await getSession()
 if (!session) return Astro.redirect('/login')
 
-// Get all debts for current user
-const { data: debts } = await supabase
+const { data: debt } = await supabase
   .from('debts')
   .select('*')
   .eq('user_id', session.user.id)
+  .single()
+
+if (!debt?.id) return Astro.redirect('/set-debt')
 
 const { data: payments } = await supabase
   .from('payments')
@@ -23,10 +25,11 @@ const { data: profile } = await supabase
   .eq('id', session.user.id)
   .single()
 
-const totalDebt = debts?.reduce((sum, d) => sum + Number(d.total_amount), 0) || 0
+const totalDebt = Number(debt?.total_amount || 0)
 const totalPaid = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0
 const remaining = totalDebt - totalPaid
 const progress = totalDebt > 0 ? (totalPaid / totalDebt) * 100 : 0
+
 ---
 
 <BaseLayout title="Dashboard">
@@ -59,19 +62,21 @@ const progress = totalDebt > 0 ? (totalPaid / totalDebt) * 100 : 0
 
       <!-- Navigation Buttons -->
       <div class="flex gap-3 mb-4">
+
         <a
-          href="/add-debt"
+          href={`/debt/${debt.id}`}
           class="flex-1 text-center bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
         >
-          Add Debt
+          Add Payment
         </a>
 
         <a
-          href="/my-debts"
-          class="flex-1 text-center bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-900 transition"
+          href={`/edit-debt/${debt.id}`}
+          class="flex-1 text-center bg-gray-700 text-white py-2 rounded-lg hover:bg-gray-800 transition"
         >
-          My Debts
+          Edit Total Debt
         </a>
+
       </div>
 
       <!-- Logout -->

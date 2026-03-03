@@ -1,0 +1,63 @@
+---
+import { supabase } from '../lib/supabase'
+import { getSession } from '../lib/auth'
+import BaseLayout from '../layouts/BaseLayout.astro'
+
+const session = await getSession()
+if (!session) return Astro.redirect('/login')
+
+let error = ''
+
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData()
+  const total_amount = Number(formData.get('total_amount'))
+
+  const { error: insertError } = await supabase
+    .from('debts')
+    .insert({
+      user_id: session.user.id,
+      name: 'Total Debt',
+      total_amount
+    })
+
+  if (insertError) {
+    error = insertError.message
+  } else {
+    return Astro.redirect('/dashboard')
+  }
+}
+---
+
+<BaseLayout title="Set Total Debt">
+  <div class="min-h-screen flex items-center justify-center bg-gray-100">
+    <div class="w-full max-w-sm bg-white p-6 rounded-xl shadow-md">
+
+      <h1 class="text-xl font-bold mb-4">
+        Set Your Total Debt
+      </h1>
+
+      <p class="text-sm text-gray-600 mb-4">
+        Enter your full current debt amount to start tracking your payoff journey.
+      </p>
+
+      {error && <p class="text-red-500 text-sm mb-3">{error}</p>}
+
+      <form method="POST" class="space-y-4">
+        <input
+          name="total_amount"
+          type="number"
+          placeholder="Enter total debt amount"
+          required
+          class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+        />
+
+        <button
+          class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+        >
+          Start Tracking
+        </button>
+      </form>
+
+    </div>
+  </div>
+</BaseLayout>
