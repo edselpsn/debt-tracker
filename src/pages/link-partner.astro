@@ -1,0 +1,119 @@
+---
+import { supabase } from '../lib/supabase'
+import { getSession } from '../lib/auth'
+import BaseLayout from '../layouts/BaseLayout.astro'
+
+const session = await getSession()
+if (!session) return Astro.redirect('/login')
+
+let error = ''
+let success = ''
+
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData()
+  const code = formData.get('invite_code')?.toString().trim()
+
+  if (!code) {
+    error = 'Invite code is required.'
+  } else {
+
+    /* --------------------------------------------
+       1️⃣ Find Partner by Invite Code
+    -------------------------------------------- */
+    const { data: partnerProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, name')
+      .eq('invite_code', code)
+      .maybeSingle()
+
+    if (profileError) {
+      error = profileError.message
+
+    } else if (!partnerProfile) {
+      error = 'Invalid invite code.'
+
+    } else if (partnerProfile.id === session.user.id) {
+      error = 'You cannot link yourself.'
+
+    } else {
+
+      /* --------------------------------------------
+         2️⃣ Check If Already Linked (both directions)
+      -------------------------------------------- */
+      const { data: existingCouple } = await supabase
+        .from('couples')
+        .select('*')
+        .or(
+          `and(user_one.eq.${session.user.id},user_two.eq.${partnerProfile.id}),
+           and(user_one.eq.${partnerProfile.id},user_two.eq.${session.user.id})`
+        )
+        .maybeSingle()
+
+      if (existingCouple) {
+        error = 'You are already linked.'
+
+      } else {
+
+        /* --------------------------------------------
+           3️⃣ Insert Couple Relationship
+        -------------------------------------------- */
+        const { error: insertError } = await supabase
+          .from('couples')
+          .insert({
+            user_one: session.user.id,
+            user_two: partnerProfile.id
+          })
+
+        if (insertError) {
+          error = insertError.message
+        } else {
+          success = `Successfully linked with ${partnerProfile.name}!`
+        }
+      }
+    }
+  }
+}
+---
+
+<BaseLayout title="Link Partner">
+  <div class="min-h-screen flex items-center justify-center bg-gray-100">
+    <div class="w-full max-w-sm bg-white p-6 rounded-xl shadow-md">
+
+      <h1 class="text-xl font-bold mb-4">Link Partner</h1>
+
+      <p class="text-sm text-gray-600 mb-4">
+        Enter your partner’s invite code.
+      </p>
+
+      {error && (
+        <p class="text-red-500 text-sm mb-3">{error}</p>
+      )}
+
+      {success && (
+        <p class="text-green-600 text-sm mb-3">{success}</p>
+      )}
+
+      <form method="POST" class="space-y-4">
+        <input
+          name="invite_code"
+          placeholder="Enter invite code"
+          required
+          class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+        />
+
+        <button
+          class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+        >
+          Link Partner
+        </button>
+      </form>
+
+      <div class="mt-6 text-center">
+        <a href="/dashboard" class="text-blue-600 hover:underline text-sm">
+          ← Back to Dashboard
+        </a>
+      </div>
+
+    </div>
+  </div>
+</BaseLayout>
