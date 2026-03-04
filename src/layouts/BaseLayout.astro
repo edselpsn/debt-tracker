@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css'
+
 const { title = 'Debt Tracker' } = Astro.props
 ---
 
@@ -8,9 +9,25 @@ const { title = 'Debt Tracker' } = Astro.props
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>{title}</title>
+
+    <!-- PWA meta -->
+    <meta name="theme-color" content="#111827" />
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- Icons -->
+    <link rel="icon" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+
+    <link rel="manifest" href="/manifest.webmanifest">
+
+    <!-- Allow Astro integrations (like PWA) to inject tags -->
+    <slot name="head" />
   </head>
-  <body>
+
+  <body class="bg-gray-100 text-gray-900 min-h-screen">
     <slot />
   </body>
 </html>

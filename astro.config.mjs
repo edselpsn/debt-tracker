@@ -16,9 +16,17 @@ export default defineConfig({
     plugins: [tailwindcss()]
   },
 
+  security: {
+    checkOrigin: false
+  },
+
   integrations: [
     vitePwa({
       registerType: 'autoUpdate',
+      devOptions: {
+        enabled: true
+      },
+      injectRegister: 'auto',
       manifest: {
         name: 'Debt Tracker',
         short_name: 'DebtTracker',
