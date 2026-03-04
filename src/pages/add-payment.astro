@@ -45,56 +45,78 @@ if (Astro.request.method === 'POST') {
   }
 }
 
-const totalPaid = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0
+const totalPaid =
+  payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0
+
 const remaining = Number(debt.total_amount) - totalPaid
-const progress = debt.total_amount > 0
-  ? (totalPaid / debt.total_amount) * 100
-  : 0
+
+const progress =
+  debt.total_amount > 0
+    ? (totalPaid / debt.total_amount) * 100
+    : 0
 ---
 
-<BaseLayout title="Add Payment">
-  <div class="min-h-screen bg-gray-100 py-10">
-    <div class="max-w-xl mx-auto bg-white p-6 rounded-xl shadow-md">
+<BaseLayout title="Add Payment" nav="payment">
+  <div class="min-h-screen bg-gray-100 dark:bg-gray-950 flex flex-col justify-center px-4 pb-24">
+
+    <div class="max-w-md mx-auto w-full space-y-6">
 
       <!-- Header -->
-      <h1 class="text-2xl font-bold mb-2">Add Payment</h1>
-      <p class="text-gray-600 mb-6">
-        Total Debt: ₱{Number(debt.total_amount).toLocaleString()}
-      </p>
+      <div>
+        <h1 class="text-2xl font-bold">Add Payment</h1>
+        <p class="text-gray-600 dark:text-gray-400 mt-1">
+          Total Debt: ₱{Number(debt.total_amount).toLocaleString()}
+        </p>
+      </div>
 
-      <!-- Summary -->
-      <div class="mb-6 space-y-2">
-        <p><span class="font-medium">Total Paid:</span> ₱{totalPaid.toLocaleString()}</p>
-        <p><span class="font-medium">Remaining:</span> ₱{remaining.toLocaleString()}</p>
+      <!-- Summary Card -->
+      <div class="bg-white dark:bg-gray-900 p-5 rounded-xl shadow space-y-3">
+        <p>
+          <span class="font-medium">Total Paid:</span>
+          ₱{totalPaid.toLocaleString()}
+        </p>
 
-        <div class="w-full bg-gray-200 h-4 rounded-full overflow-hidden mt-2">
+        <p>
+          <span class="font-medium">Remaining:</span>
+          ₱{remaining.toLocaleString()}
+        </p>
+
+        <div class="w-full bg-gray-200 dark:bg-gray-700 h-4 rounded-full overflow-hidden">
           <div
             class="bg-green-500 h-4 transition-all duration-500"
             style={`width: ${progress}%`}
           ></div>
         </div>
+
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          {progress.toFixed(1)}% paid
+        </p>
       </div>
 
-      <!-- Add Payment Form -->
-      <div class="mb-8">
+      <!-- Add Payment -->
+      <div class="bg-white dark:bg-gray-900 p-5 rounded-xl shadow space-y-4">
+
         {error && (
-          <p class="text-red-500 text-sm mb-3">{error}</p>
+          <p class="text-red-500 text-sm">{error}</p>
         )}
 
         <form method="POST" class="space-y-3">
+
           <input
             name="amount"
             type="number"
+            min="1"
+            max={remaining}
             placeholder="Payment Amount"
             required
-            class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+            class="w-full border dark:border-gray-700 dark:bg-gray-900 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
           />
 
           <input
             name="payment_date"
             type="date"
             required
-            class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+            class="w-full border dark:border-gray-700 dark:bg-gray-900 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
           />
 
           <button
@@ -102,33 +124,46 @@ const progress = debt.total_amount > 0
           >
             Add Payment
           </button>
+
         </form>
       </div>
 
       <!-- Payment History -->
-      <div>
+      <div class="bg-white dark:bg-gray-900 p-5 rounded-xl shadow">
         <h2 class="text-lg font-semibold mb-3">Payment History</h2>
 
         {payments && payments.length > 0 ? (
-          <ul class="divide-y">
+          <ul class="divide-y dark:divide-gray-800">
             {payments.map(payment => (
               <li class="py-3 flex justify-between text-sm">
-                <span>₱{Number(payment.amount).toLocaleString()}</span>
-                <span class="text-gray-500">{payment.payment_date}</span>
+                <span>
+                  ₱{Number(payment.amount).toLocaleString()}
+                </span>
+
+                <span class="text-gray-500 dark:text-gray-400">
+                  {payment.payment_date}
+                </span>
               </li>
             ))}
           </ul>
         ) : (
-          <p class="text-gray-500 text-sm">No payments yet.</p>
+          <p class="text-gray-500 dark:text-gray-400 text-sm">
+            No payments yet.
+          </p>
         )}
       </div>
 
-      <div class="mt-6">
-        <a href="/dashboard" class="text-blue-600 hover:underline text-sm">
+      <!-- Back -->
+      <div>
+        <a
+          href="/dashboard"
+          class="text-blue-600 hover:underline text-sm"
+        >
           ← Back to Dashboard
         </a>
       </div>
 
     </div>
+
   </div>
 </BaseLayout>

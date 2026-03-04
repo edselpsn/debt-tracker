@@ -29,26 +29,31 @@ if (Astro.request.method === 'POST') {
 ---
 
 <BaseLayout title="Set Total Debt">
-  <div class="min-h-screen flex items-center justify-center bg-gray-100">
-    <div class="w-full max-w-sm bg-white p-6 rounded-xl shadow-md">
+  <div class="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-950 px-4">
 
-      <h1 class="text-xl font-bold mb-4">
+    <div class="w-full max-w-sm bg-white dark:bg-gray-900 p-6 rounded-xl shadow space-y-4">
+
+      <h1 class="text-xl font-bold text-center">
         Set Your Total Debt
       </h1>
 
-      <p class="text-sm text-gray-600 mb-4">
-        Enter your full current debt amount to start tracking your payoff journey.
+      <p class="text-sm text-gray-600 dark:text-gray-400 text-center">
+        Enter your current debt amount to start tracking.
       </p>
 
-      {error && <p class="text-red-500 text-sm mb-3">{error}</p>}
+      {error && (
+        <p class="text-red-500 text-sm text-center">{error}</p>
+      )}
 
       <form method="POST" class="space-y-4">
+
         <input
           name="total_amount"
           type="number"
-          placeholder="Enter total debt amount"
+          min="0"
+          placeholder="Total debt amount"
           required
-          class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+          class="w-full border dark:border-gray-700 dark:bg-gray-900 rounded-lg p-2"
         />
 
         <button
@@ -56,8 +61,10 @@ if (Astro.request.method === 'POST') {
         >
           Start Tracking
         </button>
+
       </form>
 
     </div>
+
   </div>
 </BaseLayout>

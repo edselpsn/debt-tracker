@@ -1,0 +1,39 @@
+---
+const { current = "" } = Astro.props
+---
+
+<nav
+  class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t dark:border-gray-800 z-50"
+  style="padding-bottom: env(safe-area-inset-bottom);"
+>
+  <div class="max-w-md mx-auto grid grid-cols-3 text-center text-sm">
+
+    <a
+      href="/dashboard"
+      class={`py-3 ${current === "dashboard"
+        ? "text-blue-600 font-medium"
+        : "text-gray-500 dark:text-gray-400"}`}
+    >
+      Dashboard
+    </a>
+
+    <a
+      href="/add-payment"
+      class={`py-3 ${current === "payment"
+        ? "text-blue-600 font-medium"
+        : "text-gray-500 dark:text-gray-400"}`}
+    >
+      Payment
+    </a>
+
+    <a
+      href="/link-partner"
+      class={`py-3 ${current === "partner"
+        ? "text-blue-600 font-medium"
+        : "text-gray-500 dark:text-gray-400"}`}
+    >
+      Partner
+    </a>
+
+  </div>
+</nav>

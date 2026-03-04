@@ -17,9 +17,7 @@ if (Astro.request.method === 'POST') {
     error = 'Invite code is required.'
   } else {
 
-    /* --------------------------------------------
-       1️⃣ Find Partner by Invite Code
-    -------------------------------------------- */
+    /* 1️⃣ Find Partner by Invite Code */
     const { data: partnerProfile, error: profileError } = await supabase
       .from('profiles')
       .select('id, name')
@@ -37,9 +35,7 @@ if (Astro.request.method === 'POST') {
 
     } else {
 
-      /* --------------------------------------------
-         2️⃣ Check If Already Linked (both directions)
-      -------------------------------------------- */
+      /* 2️⃣ Check If Already Linked */
       const { data: existingCouple } = await supabase
         .from('couples')
         .select('*')
@@ -54,9 +50,7 @@ if (Astro.request.method === 'POST') {
 
       } else {
 
-        /* --------------------------------------------
-           3️⃣ Insert Couple Relationship
-        -------------------------------------------- */
+        /* 3️⃣ Insert Couple */
         const { error: insertError } = await supabase
           .from('couples')
           .insert({
@@ -75,45 +69,60 @@ if (Astro.request.method === 'POST') {
 }
 ---
 
-<BaseLayout title="Link Partner">
-  <div class="min-h-screen flex items-center justify-center bg-gray-100">
-    <div class="w-full max-w-sm bg-white p-6 rounded-xl shadow-md">
+<BaseLayout title="Link Partner" nav="partner">
+  <div class="min-h-screen bg-gray-100 dark:bg-gray-950 flex flex-col justify-center px-4 pb-24">
 
-      <h1 class="text-xl font-bold mb-4">Link Partner</h1>
+    <div class="max-w-md mx-auto w-full space-y-6">
 
-      <p class="text-sm text-gray-600 mb-4">
-        Enter your partner’s invite code.
-      </p>
+      <!-- Header -->
+      <div>
+        <h1 class="text-2xl font-bold">Link Partner</h1>
+        <p class="text-gray-600 dark:text-gray-400 mt-1">
+          Enter your partner’s invite code to connect your debt trackers.
+        </p>
+      </div>
 
-      {error && (
-        <p class="text-red-500 text-sm mb-3">{error}</p>
-      )}
+      <!-- Card -->
+      <div class="bg-white dark:bg-gray-900 p-6 rounded-xl shadow space-y-4">
 
-      {success && (
-        <p class="text-green-600 text-sm mb-3">{success}</p>
-      )}
+        {error && (
+          <p class="text-red-500 text-sm">{error}</p>
+        )}
 
-      <form method="POST" class="space-y-4">
-        <input
-          name="invite_code"
-          placeholder="Enter invite code"
-          required
-          class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
-        />
+        {success && (
+          <p class="text-green-500 text-sm">{success}</p>
+        )}
 
-        <button
-          class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+        <form method="POST" class="space-y-4">
+
+          <input
+            name="invite_code"
+            placeholder="Enter invite code"
+            required
+            class="w-full border dark:border-gray-700 dark:bg-gray-900 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+          />
+
+          <button
+            class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+          >
+            Link Partner
+          </button>
+
+        </form>
+
+      </div>
+
+      <!-- Back -->
+      <div>
+        <a
+          href="/dashboard"
+          class="text-blue-600 hover:underline text-sm"
         >
-          Link Partner
-        </button>
-      </form>
-
-      <div class="mt-6 text-center">
-        <a href="/dashboard" class="text-blue-600 hover:underline text-sm">
           ← Back to Dashboard
         </a>
       </div>
 
     </div>
+
   </div>
 </BaseLayout>
